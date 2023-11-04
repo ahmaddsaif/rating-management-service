@@ -17,11 +17,27 @@ public class ControllerAdvices {
         );
     }
 
+    @ExceptionHandler(TPAServiceException.class)
+    private ResponseEntity<ExceptionDto> handleNotFoundException(TPAServiceException ex) {
+        return new ResponseEntity(
+                new ExceptionDto(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
     @ExceptionHandler(InternalServerException.class)
     private ResponseEntity<ExceptionDto> handleNotFoundException(InternalServerException ex) {
         return new ResponseEntity(
-                new ExceptionDto(HttpStatus.NOT_FOUND, ex.getMessage()),
-                HttpStatus.NOT_FOUND
+                new ExceptionDto(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    private ResponseEntity<ExceptionDto> handleNotFoundException(BadRequestException ex) {
+        return new ResponseEntity(
+                new ExceptionDto(HttpStatus.BAD_REQUEST, ex.getMessage()),
+                HttpStatus.BAD_REQUEST
         );
     }
 }

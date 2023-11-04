@@ -6,6 +6,8 @@ import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.*
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service("TPANotificationService")
 @Primary
 public class TPANotificationService implements NotificationService {
@@ -15,7 +17,7 @@ public class TPANotificationService implements NotificationService {
         this.notificationSvcClient = notificationSvcClient;
     }
 
-    public NotificationResponseDto sendNotification(Long service_id, String message,
+    public NotificationResponseDto sendNotification(UUID service_id, String message,
                                                     String image, Channel channel)
     throws TPAServiceException, InternalServerException {
         try {

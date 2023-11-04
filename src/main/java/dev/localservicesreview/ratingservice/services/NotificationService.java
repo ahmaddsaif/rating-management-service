@@ -6,9 +6,11 @@ import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.C
 import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.NotificationResponseDto;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public interface NotificationService {
-    public NotificationResponseDto sendNotification(Long serviceId, String message,
+    public NotificationResponseDto sendNotification(UUID serviceId, String message,
                                                     String image, Channel channel)
             throws TPAServiceException, InternalServerException;
 }

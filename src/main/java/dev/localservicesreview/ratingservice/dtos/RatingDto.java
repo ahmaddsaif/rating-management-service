@@ -3,11 +3,13 @@ package dev.localservicesreview.ratingservice.dtos;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 public class RatingDto {
-    private Long id;
-    private Long service_id;
-    private Long user_id;
+    private UUID id;
+    private UUID service_id;
+    private UUID user_id;
     private Integer rating;
 }
