@@ -1,12 +1,13 @@
 package dev.localservicesreview.ratingservice.thirdpartyclients.serviceMgmtSvc;
 
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class ServiceMgmtSvcDto {
-    private Long id;
+    private UUID id;
     private String name;
     private String description;
     private String category;

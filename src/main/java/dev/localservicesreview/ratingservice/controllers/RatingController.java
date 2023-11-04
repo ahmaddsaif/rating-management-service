@@ -1,5 +1,6 @@
 package dev.localservicesreview.ratingservice.controllers;
 
+import java.util.UUID;
 import dev.localservicesreview.ratingservice.dtos.RatingDto;
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
@@ -36,7 +37,7 @@ public class RatingController {
 
     @GetMapping("/getTotalServiceRatings/{service_id}")
     public ResponseEntity<Long> getTotalRatingsByServiceId(
-            @PathVariable("service_id") Long service_id)
+            @PathVariable("service_id") UUID service_id)
             throws NotFoundException, TPAServiceException, InternalServerException{
         Long totalRatings = ratingService.getTotalRatingsByServiceId(service_id);
         return new ResponseEntity<>(totalRatings, HttpStatus.OK);
@@ -44,7 +45,7 @@ public class RatingController {
 
     @GetMapping("/getAverageServiceRatings/{service_id}")
     public ResponseEntity<Double> getAverageRatingOfService(
-            @PathVariable("service_id") Long service_id)
+            @PathVariable("service_id") UUID service_id)
             throws NotFoundException, TPAServiceException, InternalServerException{
         Double averageRating = ratingService.getAverageRatingOfService(service_id);
         return new ResponseEntity<>(averageRating, HttpStatus.OK);

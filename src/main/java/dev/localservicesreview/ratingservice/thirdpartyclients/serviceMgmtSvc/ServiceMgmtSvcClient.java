@@ -1,5 +1,6 @@
 package dev.localservicesreview.ratingservice.thirdpartyclients.serviceMgmtSvc;
 
+import java.util.UUID;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
 import dev.localservicesreview.ratingservice.exceptions.TPAServiceException;
 import dev.localservicesreview.ratingservice.models.Service;
@@ -23,7 +24,7 @@ public class ServiceMgmtSvcClient {
         this.restTemplateBuilder = restTemplateBuilder;
     }
 
-    public ServiceMgmtSvcDto getServiceById(Long id) throws NotFoundException, TPAServiceException {
+    public ServiceMgmtSvcDto getServiceById(UUID id) throws NotFoundException, TPAServiceException {
         try {
             RestTemplate restTemplate = restTemplateBuilder.build();
             ResponseEntity<ServiceMgmtSvcDto> response =

@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service("selfRatingService")
 @Primary
@@ -45,18 +46,18 @@ public class SelfRatingService implements RatingService {
     }
 
     @Override
-    public Long getTotalRatingsByServiceId(Long service_id)
+    public Long getTotalRatingsByServiceId(UUID service_id)
             throws NotFoundException, TPAServiceException, InternalServerException {
         ServiceMgmtSvcDto service = serviceManagementService.getServiceById(service_id);
-        return ratingRepository.countByService_Id(service.getId());
+        return ratingRepository.countByServiceId(service.getId());
     }
 
     @Override
-    public Double getAverageRatingOfService(Long service_id)
+    public Double getAverageRatingOfService(UUID service_id)
             throws NotFoundException, TPAServiceException, InternalServerException{
-        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(service_id);
+//        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(service_id);
         // Get all ratings for the service
-        List<Rating> ratingsList = ratingRepository.findAllByService_Id(service.getId());
+        List<Rating> ratingsList = ratingRepository.findAllByServiceId(service_id);
         Integer[] ratings = new Integer[ratingsList.size()];
         for(int i = 0; i < ratingsList.size(); i++) {
             ratings[i] = ratingsList.get(i).getRating();
@@ -68,8 +69,8 @@ public class SelfRatingService implements RatingService {
     @Override
     public RatingDto submitRating(RatingDto ratingDto)
             throws NotFoundException, TPAServiceException, InternalServerException{
-        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(ratingDto.getService_id());
-        UserDto user = userService.getUserById(ratingDto.getUser_id());
+//        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(ratingDto.getService_id());
+//        UserDto user = userService.getUserById(ratingDto.getUser_id());
 
         Rating ratingObj = convertRatingDtoToRating(ratingDto);
         Rating createdRating = ratingRepository.save(ratingObj);
@@ -109,8 +110,8 @@ public class SelfRatingService implements RatingService {
         RatingDto ratingDto = new RatingDto();
         ratingDto.setId(rating.getId());
         ratingDto.setRating(rating.getRating());
-        ratingDto.setService_id(rating.getService().getId());
-        ratingDto.setUser_id(rating.getUser().getId());
+        ratingDto.setService_id(rating.getServiceId());
+        ratingDto.setUser_id(rating.getUserId());
         return ratingDto;
     }
 
@@ -120,13 +121,13 @@ public class SelfRatingService implements RatingService {
         rating.setId(ratingDto.getId());
         rating.setRating(ratingDto.getRating());
 
-        dev.localservicesreview.ratingservice.models.Service service =
-                convertServiceDtoToService(
-                        serviceManagementService.getServiceById(ratingDto.getService_id()));
-        rating.setService(service);
+//        dev.localservicesreview.ratingservice.models.Service service =
+//                convertServiceDtoToService(
+//                        serviceManagementService.getServiceById(ratingDto.getService_id()));
+        rating.setServiceId(ratingDto.getService_id());
 
-        User user = convertUserDtoToUser(userService.getUserById(ratingDto.getUser_id()));
-        rating.setUser(user);
+//        User user = convertUserDtoToUser(userService.getUserById(ratingDto.getUser_id()));
+        rating.setUserId(ratingDto.getUser_id());
 
         return rating;
     }

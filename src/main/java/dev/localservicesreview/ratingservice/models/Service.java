@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "service")
 @Getter
@@ -12,11 +13,11 @@ import java.util.List;
 public class Service {
     @Id
     @Column(name = "id", nullable = false)
-    private Long Id;
+    private UUID Id;
 
     @Column(name = "service_name", nullable = false)
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "service")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Rating> ratings;
 }

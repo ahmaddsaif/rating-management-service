@@ -1,5 +1,6 @@
 package dev.localservicesreview.ratingservice.services;
 
+import java.util.UUID;
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
 import dev.localservicesreview.ratingservice.exceptions.TPAServiceException;
@@ -18,7 +19,7 @@ public class TPAServiceManagementService implements ServiceMgmtSvc {
         this.serviceManagementClient = serviceManagementClient;
     }
 
-    public ServiceMgmtSvcDto getServiceById(Long id) throws NotFoundException, TPAServiceException, InternalServerException {
+    public ServiceMgmtSvcDto getServiceById(UUID id) throws NotFoundException, TPAServiceException, InternalServerException {
         try {
             return serviceManagementClient.getServiceById(id);
         } catch(NotFoundException e) {
