@@ -1,6 +1,7 @@
 package dev.localservicesreview.ratingservice.services;
 
 import dev.localservicesreview.ratingservice.dtos.RatingDto;
+import dev.localservicesreview.ratingservice.dtos.RatingRequestDto;
 import dev.localservicesreview.ratingservice.exceptions.BadRequestException;
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
@@ -114,7 +115,7 @@ public class RatingServiceTest {
 
     @Test
     public void testSubmitRatingWhenValidRatingDtoThenReturnRatingDto() throws NotFoundException, InternalServerException, BadRequestException {
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(5);
 
         RatingDto expectedRatingDto = new RatingDto();
@@ -130,7 +131,7 @@ public class RatingServiceTest {
 
     @Test
     public void testSubmitRatingWhenNonExistentIdThenThrowNotFoundException() throws NotFoundException, InternalServerException, BadRequestException {
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(5);
 
         when(ratingService.submitRating(ratingDto)).thenThrow(NotFoundException.class);
@@ -140,7 +141,7 @@ public class RatingServiceTest {
 
     @Test
     public void testSubmitRatingWhenInternalServerExceptionThenThrowInternalServerException() throws NotFoundException, InternalServerException, BadRequestException {
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(5);
 
         when(ratingService.submitRating(ratingDto)).thenThrow(InternalServerException.class);
@@ -151,7 +152,7 @@ public class RatingServiceTest {
     @Test
     public void testUpdateRatingWhenValidRatingDtoThenReturnRatingDto() throws NotFoundException, InternalServerException, BadRequestException {
         UUID ratingId = UUID.randomUUID();
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(4);
 
         RatingDto expectedRatingDto = new RatingDto();
@@ -161,9 +162,9 @@ public class RatingServiceTest {
         UUID serviceId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        when(ratingService.updateRating(serviceId, userId, ratingDto.getRating())).thenReturn(expectedRatingDto);
+        when(ratingService.updateRating(ratingDto)).thenReturn(expectedRatingDto);
 
-        RatingDto actualRatingDto = ratingService.updateRating(serviceId, userId, ratingDto.getRating());
+        RatingDto actualRatingDto = ratingService.updateRating(ratingDto);
 
         assertEquals(expectedRatingDto, actualRatingDto);
     }
@@ -171,59 +172,79 @@ public class RatingServiceTest {
     @Test
     public void testUpdateRatingWhenNonExistentIdThenThrowNotFoundException() throws NotFoundException, InternalServerException, BadRequestException {
         UUID ratingId = UUID.randomUUID();
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(4);
 
         UUID serviceId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        when(ratingService.updateRating(serviceId, userId, ratingDto.getRating())).thenThrow(NotFoundException.class);
+        when(ratingService.updateRating(ratingDto)).thenThrow(NotFoundException.class);
 
-        assertThrows(NotFoundException.class, () -> ratingService.updateRating(serviceId, userId, ratingDto.getRating()));
+        assertThrows(NotFoundException.class, () -> ratingService.updateRating(ratingDto));
     }
 
     @Test
     public void testUpdateRatingWhenInternalServerExceptionThenThrowInternalServerException() throws NotFoundException, InternalServerException, BadRequestException {
         UUID ratingId = UUID.randomUUID();
-        RatingDto ratingDto = new RatingDto();
+        RatingRequestDto ratingDto = new RatingRequestDto();
         ratingDto.setRating(4);
 
         UUID serviceId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        when(ratingService.updateRating(serviceId, userId, ratingDto.getRating())).thenThrow(InternalServerException.class);
+        when(ratingService.updateRating(ratingDto)).thenThrow(InternalServerException.class);
 
-        assertThrows(InternalServerException.class, () -> ratingService.updateRating(serviceId, userId, ratingDto.getRating()));
+        assertThrows(InternalServerException.class, () -> ratingService.updateRating(ratingDto));
     }
 
     @Test
     public void testDeleteRatingWhenValidIdThenReturnRatingDto() throws NotFoundException, InternalServerException {
         UUID ratingId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
         RatingDto expectedRatingDto = new RatingDto();
         expectedRatingDto.setId(ratingId);
+        expectedRatingDto.setService_id(serviceId);
+        expectedRatingDto.setUser_id(userId);
+        expectedRatingDto.setRating(3);
 
-        when(ratingService.deleteRating(ratingId)).thenReturn(expectedRatingDto);
+        RatingRequestDto ratingRequestDto = new RatingRequestDto();
+        ratingRequestDto.setService_id(serviceId);
+        ratingRequestDto.setUser_id(userId);
 
-        RatingDto actualRatingDto = ratingService.deleteRating(ratingId);
+        when(ratingService.deleteRating(ratingRequestDto)).thenReturn(expectedRatingDto);
+
+        RatingDto actualRatingDto = ratingService.deleteRating(ratingRequestDto);
 
         assertEquals(expectedRatingDto, actualRatingDto);
     }
 
     @Test
     public void testDeleteRatingWhenNonExistentIdThenThrowNotFoundException() throws NotFoundException, InternalServerException {
-        UUID ratingId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
 
-        when(ratingService.deleteRating(ratingId)).thenThrow(NotFoundException.class);
+        RatingRequestDto ratingRequestDto = new RatingRequestDto();
+        ratingRequestDto.setService_id(serviceId);
+        ratingRequestDto.setUser_id(userId);
 
-        assertThrows(NotFoundException.class, () -> ratingService.deleteRating(ratingId));
+        when(ratingService.deleteRating(ratingRequestDto)).thenThrow(NotFoundException.class);
+
+        assertThrows(NotFoundException.class, () -> ratingService.deleteRating(ratingRequestDto));
     }
 
     @Test
     public void testDeleteRatingWhenInternalServerExceptionThenThrowInternalServerException() throws NotFoundException, InternalServerException {
-        UUID ratingId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
 
-        when(ratingService.deleteRating(ratingId)).thenThrow(InternalServerException.class);
+        RatingRequestDto ratingRequestDto = new RatingRequestDto();
+        ratingRequestDto.setService_id(serviceId);
+        ratingRequestDto.setUser_id(userId);
 
-        assertThrows(InternalServerException.class, () -> ratingService.deleteRating(ratingId));
+        when(ratingService.deleteRating(ratingRequestDto)).thenThrow(InternalServerException.class);
+
+        assertThrows(InternalServerException.class, () -> ratingService.deleteRating(ratingRequestDto));
     }
 }
