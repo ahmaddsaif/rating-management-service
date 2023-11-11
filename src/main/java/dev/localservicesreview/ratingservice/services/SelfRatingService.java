@@ -1,10 +1,10 @@
 package dev.localservicesreview.ratingservice.services;
 
 import dev.localservicesreview.ratingservice.dtos.RatingDto;
+import dev.localservicesreview.ratingservice.dtos.RatingRequestDto;
 import dev.localservicesreview.ratingservice.exceptions.BadRequestException;
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
-import dev.localservicesreview.ratingservice.exceptions.TPAServiceException;
 import dev.localservicesreview.ratingservice.models.Rating;
 import dev.localservicesreview.ratingservice.repositories.RatingRepository;
 import org.springframework.context.annotation.Primary;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service("selfRatingService")
 @Primary
 public class SelfRatingService implements RatingService {
-    private RatingRepository ratingRepository;
+    private final RatingRepository ratingRepository;
 //    TPAServiceManagementService serviceManagementService;
     TPANotificationService notificationService;
 //    TPAUserService userService;
@@ -42,17 +42,12 @@ public class SelfRatingService implements RatingService {
     }
 
     @Override
-    public Long getTotalRatingsByServiceId(UUID service_id)
-            throws NotFoundException, TPAServiceException, InternalServerException {
-        return ratingRepository.countByServiceId(service_id); //
-//        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(service_id);
-//        return ratingRepository.countByService_Id(service.getId());
+    public Long getTotalRatingsByServiceId(UUID service_id) {
+        return ratingRepository.countByServiceId(service_id);
     }
 
     @Override
-    public Double getAverageRatingOfService(UUID service_id)
-            throws NotFoundException, TPAServiceException, InternalServerException{
-//        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(service_id);
+    public Double getAverageRatingOfService(UUID service_id) {
         // Get all ratings for the service
         List<Rating> ratingsList = ratingRepository.findAllByServiceId(service_id);
         Integer[] ratings = new Integer[ratingsList.size()];
@@ -64,30 +59,35 @@ public class SelfRatingService implements RatingService {
     }
 
     @Override
-    public RatingDto submitRating(RatingDto ratingDto)
-            throws NotFoundException, TPAServiceException, InternalServerException, BadRequestException {
-        if(ratingDto.getRating() < 1 || ratingDto.getRating() > 5) {
+    public RatingDto submitRating(RatingRequestDto ratingRequestDto)
+            throws BadRequestException {
+        if(ratingRequestDto.getRating() < 1 || ratingRequestDto.getRating() > 5) {
             throw new BadRequestException("Rating must be in range 1 to 5.");
         }
-//        ServiceMgmtSvcDto service = serviceManagementService.getServiceById(ratingDto.getService_id());
-//        UserDto user = userService.getUserById(ratingDto.getUser_id());
 
-        Rating ratingObj = convertRatingDtoToRating(ratingDto);
+        Rating ratingObj = convertRatingRequestDtoToRating(ratingRequestDto);
         Rating createdRating = ratingRepository.save(ratingObj);
 
         return convertRatingToRatingDto(createdRating);
     }
 
     @Override
-    public RatingDto updateRating(UUID rating_id, Integer rating)
+    public RatingDto updateRating(RatingRequestDto ratingRequestDto)
             throws NotFoundException, InternalServerException, BadRequestException {
-        if(rating < 1 || rating > 5) {
+        if(ratingRequestDto.getRating() < 1 || ratingRequestDto.getRating() > 5) {
             throw new BadRequestException("Rating must be in range 1 to 5.");
         }
         try {
-            Rating ratingObj = ratingRepository.findById(rating_id)
-                    .orElseThrow(() -> new NotFoundException("Rating with id: " + rating_id + " does not exist."));
-            ratingObj.setRating(rating);
+            UUID serviceId = ratingRequestDto.getService_id();
+            UUID userId = ratingRequestDto.getUser_id();
+            Rating ratingObj = ratingRepository.findByServiceIdAndUserId(serviceId, userId);
+
+            if(ratingObj == null || ratingObj.getId() == null) {
+                throw new NotFoundException(
+                        "Rating with service id: " + serviceId + " and user id: " + userId + " does not exist.");
+            }
+
+            ratingObj.setRating(ratingRequestDto.getRating());
             Rating updatedRating = ratingRepository.save(ratingObj);
             return convertRatingToRatingDto(updatedRating);
         } catch (RuntimeException e) {
@@ -97,11 +97,18 @@ public class SelfRatingService implements RatingService {
     }
 
     @Override
-    public RatingDto deleteRating(UUID rating_id)
+    public RatingDto deleteRating(RatingRequestDto ratingRequestDto)
     throws NotFoundException, InternalServerException{
         try {
-            Rating ratingObj = ratingRepository.findById(rating_id)
-                    .orElseThrow(() -> new NotFoundException("Rating with id: " + rating_id + " does not exist."));
+            UUID serviceId = ratingRequestDto.getService_id();
+            UUID userId = ratingRequestDto.getUser_id();
+            Rating ratingObj = ratingRepository.findByServiceIdAndUserId(serviceId, userId);
+
+            if(ratingObj == null || ratingObj.getId() == null) {
+                throw new NotFoundException(
+                        "Rating with service id: " + serviceId + " and user id: " + userId + " does not exist.");
+            }
+
             ratingRepository.delete(ratingObj);
             return convertRatingToRatingDto(ratingObj);
         } catch (RuntimeException e) {
@@ -118,40 +125,14 @@ public class SelfRatingService implements RatingService {
         return ratingDto;
     }
 
-    public Rating convertRatingDtoToRating(RatingDto ratingDto)
-    throws NotFoundException, TPAServiceException, InternalServerException{
+    public Rating convertRatingRequestDtoToRating(RatingRequestDto ratingRequestDto) {
         Rating rating = new Rating();
-        rating.setId(ratingDto.getId());
-        rating.setRating(ratingDto.getRating());
-        rating.setServiceId(ratingDto.getService_id());
-        rating.setUserId(ratingDto.getUser_id());
-//
-//        dev.localservicesreview.ratingservice.models.Service service =
-//                convertServiceDtoToService(
-//                        serviceManagementService.getServiceById(ratingDto.getService_id()));
-//        rating.setService(service);
-//
-//        User user = convertUserDtoToUser(userService.getUserById(ratingDto.getUser_id()));
-//        rating.setUser(user);
+        rating.setRating(ratingRequestDto.getRating());
+        rating.setServiceId(ratingRequestDto.getService_id());
+        rating.setUserId(ratingRequestDto.getUser_id());
 
         return rating;
     }
-
-//    public User convertUserDtoToUser(UserDto userDto) {
-//        User user = new User();
-//        user.setId(userDto.getId());
-//        user.setName(userDto.getName());
-//        return user;
-//    }
-
-//    public dev.localservicesreview.ratingservice.models.Service
-//    convertServiceDtoToService(ServiceMgmtSvcDto serviceDto) {
-//        dev.localservicesreview.ratingservice.models.Service service =
-//                new dev.localservicesreview.ratingservice.models.Service();
-//        service.setId(serviceDto.getId());
-//        service.setName(serviceDto.getName());
-//        return service;
-//    }
 
     public double calculateAverageRating(Integer[] ratings) {
         // Calculate the sum of all ratings

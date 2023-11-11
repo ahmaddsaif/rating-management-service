@@ -12,4 +12,6 @@ public interface RatingRepository extends JpaRepository<Rating, UUID> {
     Long countByServiceId(UUID serviceId);
 
     List<Rating> findAllByServiceId(UUID serviceId);
+
+    Rating findByServiceIdAndUserId(UUID serviceId, UUID userId);
 }

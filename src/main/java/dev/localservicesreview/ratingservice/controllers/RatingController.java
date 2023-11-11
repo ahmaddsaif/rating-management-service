@@ -1,12 +1,14 @@
 package dev.localservicesreview.ratingservice.controllers;
 
 import dev.localservicesreview.ratingservice.dtos.RatingDto;
+import dev.localservicesreview.ratingservice.dtos.RatingRequestDto;
 import dev.localservicesreview.ratingservice.exceptions.BadRequestException;
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
 import dev.localservicesreview.ratingservice.exceptions.NotFoundException;
-import dev.localservicesreview.ratingservice.exceptions.TPAServiceException;
 import dev.localservicesreview.ratingservice.services.TPANotificationService;
 import dev.localservicesreview.ratingservice.services.RatingService;
+import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.Channel;
+import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.NotificationRequestDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,115 +19,120 @@ import java.util.UUID;
 @RequestMapping("/ratings")
 public class RatingController {
     private final RatingService ratingService;
-//    private final TPAServiceManagementService serviceManagementService;
-//    private final TPAUserService userService;
     private final TPANotificationService notificationService;
 
     public RatingController(RatingService ratingService,
                             TPANotificationService notificationService) {
         this.ratingService = ratingService;
-//        this.serviceManagementService = serviceManagementService;
-//        this.userService = userService;
         this.notificationService = notificationService;
     }
 
     @GetMapping("/getTotalServiceRatings/{service_id}")
     public ResponseEntity<Long> getTotalRatingsByServiceId(
-            @PathVariable("service_id") UUID service_id) throws TPAServiceException, InternalServerException, NotFoundException {
-//        try {
-            Long totalRatings = ratingService.getTotalRatingsByServiceId(service_id);
-            return new ResponseEntity<>(totalRatings, HttpStatus.OK);
-//        } catch (NotFoundException e) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+            @PathVariable("service_id") UUID service_id) throws InternalServerException, NotFoundException, BadRequestException {
+        if(service_id == null || service_id.toString().isEmpty()){
+            throw new BadRequestException("Service id cannot be null or empty");
+        }
+        Long totalRatings = ratingService.getTotalRatingsByServiceId(service_id);
+        return new ResponseEntity<>(totalRatings, HttpStatus.OK);
     }
 
     @GetMapping("/getAverageServiceRatings/{service_id}")
     public ResponseEntity<Double> getAverageRatingOfService(
-            @PathVariable("service_id") UUID service_id) throws TPAServiceException, InternalServerException, NotFoundException {
-//        try {
-            Double averageRating = ratingService.getAverageRatingOfService(service_id);
-            return new ResponseEntity<>(averageRating, HttpStatus.OK);
-//        } catch (NotFoundException e) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+            @PathVariable("service_id") UUID service_id) throws InternalServerException, NotFoundException, BadRequestException {
+        if(service_id == null || service_id.toString().isEmpty()){
+            throw new BadRequestException("Service id cannot be null or empty");
+        }
+        Double averageRating = ratingService.getAverageRatingOfService(service_id);
+        return new ResponseEntity<>(averageRating, HttpStatus.OK);
     }
 
-    @PostMapping("/submit")
-    public ResponseEntity<RatingDto> submitRating(@RequestBody RatingDto ratingDto) throws TPAServiceException, InternalServerException, NotFoundException, BadRequestException {
+    @PostMapping
+    public ResponseEntity<RatingDto> submitRating(@RequestBody RatingRequestDto ratingReqDto)
+            throws InternalServerException, NotFoundException, BadRequestException {
+        if(ratingReqDto.getService_id() == null || ratingReqDto.getService_id().toString().isEmpty()){
+            throw new BadRequestException("Service id cannot be null or empty");
+        }
+        if(ratingReqDto.getUser_id() == null || ratingReqDto.getUser_id().toString().isEmpty()){
+            throw new BadRequestException("User id cannot be null or empty");
+        }
+        if(ratingReqDto.getRating() == null){
+            throw new BadRequestException("Rating cannot be null or less than 0");
+        }
 
-//        if(ratingDto.getRating() < 1 || ratingDto.getRating() > 5) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-////            throw new BadRequestException("Rating must be in range 1 to 5.");
-//        }
+        RatingDto newRating = ratingService.submitRating(ratingReqDto);
 
-//        try {
-            // Call the service to submit the rating
-            RatingDto newRating = ratingService.submitRating(ratingDto);
+        NotificationRequestDto notificationRequestDto = new NotificationRequestDto();
+        notificationRequestDto.setService_id(newRating.getService_id());
+        notificationRequestDto.setData("New rating " + newRating.getRating() +
+                " received for service.");
+        notificationRequestDto.setType("alert");
+        notificationRequestDto.setSubject("New rating received");
+        notificationRequestDto.setChannel(Channel.EMAIL);
+        notificationRequestDto.setImage_url(null);
 
-            notificationService.sendNotification(
-                    newRating.getService_id(),
-                    "New rating " + newRating.getRating() +
-                            " received for service.", null, null);
+        notificationService.sendNotification(notificationRequestDto, newRating.getUser_id());
 
-            // Return a response with the newly created rating
-            return new ResponseEntity<>(newRating, HttpStatus.OK);
-//        } catch (BadRequestException e) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//        catch (NotFoundException e) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+        // Return a response with the newly created rating
+        return new ResponseEntity<>(newRating, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping
     public ResponseEntity<RatingDto> updateRating(
-            @PathVariable("id") UUID id, @RequestBody RatingDto ratingDto) throws InternalServerException, NotFoundException, BadRequestException, TPAServiceException {
+            @RequestBody RatingRequestDto ratingReqDto) throws InternalServerException, NotFoundException, BadRequestException {
 
-//        if(ratingDto.getRating() < 1 || ratingDto.getRating() > 5) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-////            throw new BadRequestException("Rating must be in range 1 to 5.");
-//        }
+        if(ratingReqDto.getService_id() == null || ratingReqDto.getService_id().toString().isEmpty()){
+            throw new BadRequestException("Service id cannot be null or empty");
+        }
+        if(ratingReqDto.getUser_id() == null || ratingReqDto.getUser_id().toString().isEmpty()){
+            throw new BadRequestException("User id cannot be null or empty");
+        }
+        if(ratingReqDto.getRating() == null){
+            throw new BadRequestException("Rating cannot be null or less than 0");
+        }
+        // Call the service to submit the rating
+        RatingDto updatedRating = ratingService.updateRating(ratingReqDto);
 
-//        try {
-            // Call the service to submit the rating
-            RatingDto updatedRating = ratingService.updateRating(id, ratingDto.getRating());
+        NotificationRequestDto notificationRequestDto = new NotificationRequestDto();
+        notificationRequestDto.setService_id(updatedRating.getService_id());
+        notificationRequestDto.setData("Rating update " + updatedRating.getRating() +
+                " received for service.");
+        notificationRequestDto.setType("alert");
+        notificationRequestDto.setSubject("Rating update received");
+        notificationRequestDto.setChannel(Channel.EMAIL);
+        notificationRequestDto.setImage_url(null);
 
-        notificationService.sendNotification(
-                updatedRating.getService_id(),
-                "New rating " + updatedRating.getRating() + " received for service.", null, null);
+        notificationService.sendNotification(notificationRequestDto, updatedRating.getUser_id());
 
-            // Return a response with the newly created rating
-            return new ResponseEntity<>(updatedRating, HttpStatus.OK);
-//        } catch (BadRequestException e) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        } catch (NotFoundException e) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+        // Return a response with the newly created rating
+        return new ResponseEntity<>(updatedRating, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<RatingDto> deleteRating(@PathVariable("id") UUID id)
-            throws NotFoundException, TPAServiceException, InternalServerException{
+    @DeleteMapping
+    public ResponseEntity<RatingDto> deleteRating(@RequestBody RatingRequestDto ratingReqDto)
+            throws NotFoundException, InternalServerException, BadRequestException {
 
-//        try {
-            // Call the service to submit the rating
-            RatingDto deletedRating = ratingService.deleteRating(id);
+        if(ratingReqDto.getService_id() == null || ratingReqDto.getService_id().toString().isEmpty()){
+            throw new BadRequestException("Service id cannot be null or empty");
+        }
+        if(ratingReqDto.getUser_id() == null || ratingReqDto.getUser_id().toString().isEmpty()){
+            throw new BadRequestException("User id cannot be null or empty");
+        }
+        // Call the service to submit the rating
+        RatingDto deletedRating = ratingService.deleteRating(ratingReqDto);
 
-            // Return a response with the newly created rating
-            return new ResponseEntity<>(deletedRating, HttpStatus.OK);
-//        } catch (NotFoundException e) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
+        NotificationRequestDto notificationRequestDto = new NotificationRequestDto();
+        notificationRequestDto.setService_id(deletedRating.getService_id());
+        notificationRequestDto.setData("Rating delete " + deletedRating.getRating() +
+                " received for service.");
+        notificationRequestDto.setType("alert");
+        notificationRequestDto.setSubject("Rating delete received");
+        notificationRequestDto.setChannel(Channel.EMAIL);
+        notificationRequestDto.setImage_url(null);
+
+        notificationService.sendNotification(notificationRequestDto, deletedRating.getUser_id());
+
+        // Return a response with the deleted rating
+        return new ResponseEntity<>(deletedRating, HttpStatus.OK);
     }
 }

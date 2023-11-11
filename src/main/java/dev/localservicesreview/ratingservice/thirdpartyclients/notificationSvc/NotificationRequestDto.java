@@ -9,6 +9,10 @@ import java.util.UUID;
 @Setter
 public class NotificationRequestDto {
     private UUID service_id;
-    private NotificationDataDto[] notificationData;
+    private String data;
+    private String image_url;
+    private Channel channel = Channel.EMAIL;
+    private String type = "alert";
+    private String subject;
 }
 

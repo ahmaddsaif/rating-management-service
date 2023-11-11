@@ -1,16 +1,13 @@
 package dev.localservicesreview.ratingservice.services;
 
 import dev.localservicesreview.ratingservice.exceptions.InternalServerException;
-import dev.localservicesreview.ratingservice.exceptions.TPAServiceException;
-import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.Channel;
-import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.NotificationResponseDto;
+import dev.localservicesreview.ratingservice.thirdpartyclients.notificationSvc.NotificationRequestDto;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 public interface NotificationService {
-    public NotificationResponseDto sendNotification(UUID serviceId, String message,
-                                                    String image, Channel channel)
-            throws TPAServiceException, InternalServerException;
+    public void sendNotification(NotificationRequestDto notificationRequestDto, UUID userId)
+            throws InternalServerException;
 }
