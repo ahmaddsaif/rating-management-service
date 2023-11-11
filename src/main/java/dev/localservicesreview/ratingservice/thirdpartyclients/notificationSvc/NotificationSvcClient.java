@@ -26,9 +26,12 @@ public class NotificationSvcClient {
     public void sendNotification(NotificationRequestDto notificationReqDto, UUID userId) throws InternalServerException {
         try {
             RestTemplate restTemplate = restTemplateBuilder.build();
-            ResponseEntity response =
-                    restTemplate.postForObject(notificationSvcBaseUrl + notificationSend + "/" + userId,
-                            notificationReqDto, ResponseEntity.class);
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(notificationSvcBaseUrl + notificationSend + "/" + userId,
+                            notificationReqDto, String.class);
+//            var response =
+//                    restTemplate.postForObject(notificationSvcBaseUrl + notificationSend + "/" + userId,
+//                            notificationReqDto, ResponseEntity.class);
 
             System.out.println(response);
 
